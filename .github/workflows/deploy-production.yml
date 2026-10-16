@@ -1,0 +1,62 @@
+name: Deploy Frontend to Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # Allows manual trigger from GitHub
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js application
+        env:
+          NEXT_PUBLIC_API_URL: https://api.amroozcollection.com
+        run: npm run build
+
+      - name: Deploy to Hostinger via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            echo "🚀 Starting frontend deployment..."
+            
+            # Navigate to project directory
+            cd /home/u278943707/domains/amroozcollection.com/public_html
+            
+            # Pull latest code from GitHub
+            git pull origin main
+            
+            # Install dependencies
+            npm ci --production
+            
+            # Build the application
+            NEXT_PUBLIC_API_URL=https://api.amroozcollection.com npm run build
+            
+            # Restart the application (if using PM2 or similar)
+            # pm2 restart amrooz-frontend || true
+            
+            echo "✅ Frontend deployment completed successfully!"
+
+      - name: Verify deployment
+        run: |
+          echo "⏳ Waiting for server to restart..."
+          sleep 10
+          curl -f https://amroozcollection.com || exit 1
+          echo "✅ Frontend is responding!"
