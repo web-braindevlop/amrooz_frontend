@@ -8,6 +8,11 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      DEPLOY_SSH_HOST: ${{ secrets.SSH_HOST || vars.SSH_HOST }}
+      DEPLOY_SSH_USERNAME: ${{ secrets.SSH_USERNAME || vars.SSH_USERNAME }}
+      DEPLOY_SSH_PASSWORD: ${{ secrets.SSH_PASSWORD || vars.SSH_PASSWORD }}
+      DEPLOY_SSH_PORT: ${{ secrets.SSH_PORT || vars.SSH_PORT }}
     
     steps:
       - name: Checkout code
@@ -39,13 +44,26 @@ jobs:
             next.config.js \
             node_modules
 
+      - name: Validate deployment credentials
+        run: |
+          missing=()
+          [ -z "$DEPLOY_SSH_HOST" ] && missing+=("SSH_HOST/secrets or vars")
+          [ -z "$DEPLOY_SSH_USERNAME" ] && missing+=("SSH_USERNAME/secrets or vars")
+          [ -z "$DEPLOY_SSH_PASSWORD" ] && missing+=("SSH_PASSWORD/secrets or vars")
+          [ -z "$DEPLOY_SSH_PORT" ] && missing+=("SSH_PORT/secrets or vars")
+
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "❌ Missing deployment credentials: ${missing[*]}"
+            exit 1
+          fi
+
       - name: Deploy to Hostinger via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          port: ${{ secrets.SSH_PORT }}
+          host: ${{ env.DEPLOY_SSH_HOST }}
+          username: ${{ env.DEPLOY_SSH_USERNAME }}
+          password: ${{ env.DEPLOY_SSH_PASSWORD }}
+          port: ${{ env.DEPLOY_SSH_PORT }}
           script: |
             echo "🚀 Starting frontend deployment..."
             
@@ -67,20 +85,20 @@ jobs:
       - name: Transfer build files
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          port: ${{ secrets.SSH_PORT }}
+          host: ${{ env.DEPLOY_SSH_HOST }}
+          username: ${{ env.DEPLOY_SSH_USERNAME }}
+          password: ${{ env.DEPLOY_SSH_PASSWORD }}
+          port: ${{ env.DEPLOY_SSH_PORT }}
           source: "deployment.tar.gz"
           target: "/home/u278943707/domains/amroozcollection.com/public_html/"
 
       - name: Extract and restart application
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          port: ${{ secrets.SSH_PORT }}
+          host: ${{ env.DEPLOY_SSH_HOST }}
+          username: ${{ env.DEPLOY_SSH_USERNAME }}
+          password: ${{ env.DEPLOY_SSH_PASSWORD }}
+          port: ${{ env.DEPLOY_SSH_PORT }}
           script: |
             cd /home/u278943707/domains/amroozcollection.com/public_html
             
