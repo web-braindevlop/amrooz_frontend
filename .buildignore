@@ -1,0 +1,2 @@
+# Ignore admin routes during build if they cause issues
+# app/admin

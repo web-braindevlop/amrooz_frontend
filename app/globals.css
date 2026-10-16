@@ -1,0 +1,280 @@
+@import "tailwindcss";
+
+/* ============================================================
+   AMROOZ COLLECTION — Design System (Tailwind CSS v4)
+   Luxury / premium fashion aesthetic: charcoal + gold + cream
+   ============================================================ */
+
+@theme {
+  /* Brand palette */
+  --color-primary: #17150f;
+  --color-primary-soft: #262019;
+  --color-secondary: #f7f4ee;
+  --color-cream: #f8eadd;
+  --color-ink: #14110d;
+
+  /* Gold accent scale */
+  --color-accent: #c8a24a;
+  --color-accent-soft: #e7d5a6;
+  --color-accent-dark: #9c7c30;
+  --color-accent-muted: #b9974a;
+
+  /* Neutrals tuned to warm the UI */
+  --color-sand-50: #faf8f3;
+  --color-sand-100: #f2ede3;
+  --color-sand-200: #e6ddcd;
+  --color-sand-300: #d5c7ae;
+
+  /* Fonts (wired to next/font variables in layout.js) */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: var(--font-playfair), ui-serif, Georgia, "Times New Roman", serif;
+
+  /* Motion */
+  --ease-luxe: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Animations */
+  --animate-marquee: marquee 26s linear infinite;
+  --animate-fade-up: fade-up 0.7s var(--ease-luxe) both;
+  --animate-fade-in: fade-in 0.6s var(--ease-luxe) both;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+
+  /* Shadows */
+  --shadow-luxe: 0 24px 60px -28px rgb(20 17 13 / 0.35);
+  --shadow-card: 0 2px 10px -4px rgb(20 17 13 / 0.12);
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes shimmer {
+  from { background-position: -180% 0; }
+  to { background-position: 180% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* ---------- Base ---------- */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-cream);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-serif);
+    letter-spacing: -0.01em;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Refined scrollbar */
+  ::-webkit-scrollbar { width: 11px; height: 11px; }
+  ::-webkit-scrollbar-track { background: var(--color-sand-100); }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-sand-300);
+    border-radius: 999px;
+    border: 3px solid var(--color-sand-100);
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-accent-muted); }
+}
+
+/* ---------- Reusable utilities ---------- */
+@layer utilities {
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+
+  .text-balance { text-wrap: balance; }
+
+  /* Small caps tracking used for eyebrow labels */
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.28em;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  /* Animated gradient text for accents */
+  .text-gold-gradient {
+    background: linear-gradient(100deg, #b9974a 0%, #e7d5a6 45%, #c8a24a 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Shimmering skeleton fill */
+  .skeleton {
+    background: linear-gradient(
+      100deg,
+      var(--color-sand-100) 30%,
+      var(--color-sand-200) 50%,
+      var(--color-sand-100) 70%
+    );
+    background-size: 200% 100%;
+    animation: var(--animate-shimmer);
+  }
+
+  /* Fine underline reveal for links */
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.4s var(--ease-luxe);
+  }
+  .link-underline:hover { background-size: 100% 1px; }
+}
+
+/* ============================================================
+   RICH TEXT — shared by the admin editor surface (.rte-content)
+   and the storefront renderer. Tailwind's preflight flattens
+   headings/lists, so formatted content needs its own styles.
+   ============================================================ */
+
+.rte-content {
+  line-height: 1.7;
+  word-break: break-word;
+}
+
+.rte-content > *:first-child { margin-top: 0; }
+.rte-content > *:last-child { margin-bottom: 0; }
+
+.rte-content p { margin: 0 0 0.85em; }
+
+.rte-content h1,
+.rte-content h2,
+.rte-content h3,
+.rte-content h4,
+.rte-content h5,
+.rte-content h6 {
+  font-family: var(--font-serif);
+  color: var(--color-primary);
+  line-height: 1.25;
+  margin: 1.4em 0 0.5em;
+}
+
+.rte-content h1 { font-size: 1.9em; }
+.rte-content h2 { font-size: 1.6em; }
+.rte-content h3 { font-size: 1.35em; }
+.rte-content h4 { font-size: 1.15em; }
+.rte-content h5 { font-size: 1em; font-weight: 600; }
+.rte-content h6 {
+  font-size: 0.9em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.rte-content ul,
+.rte-content ol {
+  margin: 0 0 0.85em;
+  padding-left: 1.5em;
+}
+.rte-content ul { list-style: disc; }
+.rte-content ol { list-style: decimal; }
+.rte-content ul ul { list-style: circle; }
+.rte-content ol ol { list-style: lower-alpha; }
+.rte-content li { margin: 0.25em 0; }
+
+.rte-content blockquote {
+  margin: 1.1em 0;
+  padding: 0.2em 0 0.2em 1.1em;
+  border-left: 3px solid var(--color-accent);
+  color: color-mix(in srgb, var(--color-primary) 72%, transparent);
+  font-style: italic;
+}
+
+.rte-content a {
+  color: var(--color-accent-dark);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.rte-content b,
+.rte-content strong { font-weight: 600; }
+
+.rte-content hr {
+  margin: 1.6em 0;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-primary) 15%, transparent);
+}
+
+.rte-content code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  background: var(--color-sand-100);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+
+/* The "Read More" tag, shown while editing in place of <!--more--> */
+.rte-content .rte-more {
+  position: relative;
+  height: 0;
+  margin: 1.5em 0;
+  border-top: 2px dashed color-mix(in srgb, var(--color-accent) 55%, transparent);
+  user-select: none;
+}
+
+.rte-content .rte-more::after {
+  content: "MORE";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  color: var(--color-accent-dark);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  padding: 0 0.6em;
+}
+
+/* Everything after the more tag is what WordPress hides behind "read more" */
+.rte-content [contenteditable="false"] { cursor: default; }
