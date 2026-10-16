@@ -261,6 +261,32 @@ export default function VariantsEditor({
     onChange(variants.filter((_, i) => i !== index));
   }
 
+  // Copy data from this variant to all other variants with the same color
+  function copyToSameColor(sourceIndex) {
+    const source = variants[sourceIndex];
+    if (!source) return;
+
+    const updated = variants.map((v, i) => {
+      // Skip the source variant and variants with different colors
+      if (i === sourceIndex || v.color !== source.color) return v;
+      
+      // Copy all fields except size and color (which should stay unique)
+      return {
+        ...v,
+        sku: '', // Keep SKU empty as it should be unique
+        stock: source.stock,
+        priceOverride: source.priceOverride,
+        salePrice: source.salePrice,
+        saleStartDate: source.saleStartDate,
+        saleEndDate: source.saleEndDate,
+        isActive: source.isActive,
+        imageUrl: source.imageUrl,
+      };
+    });
+    
+    onChange(updated);
+  }
+
   const noAttributes = colorChips.length === 0 && sizeChips.length === 0;
 
   if (noAttributes) {
@@ -302,7 +328,11 @@ export default function VariantsEditor({
         </p>
       ) : (
         <div className="space-y-3">
-          {variants.map((v, i) => (
+          {variants.map((v, i) => {
+            // Count how many other variants have the same color
+            const sameColorCount = variants.filter((variant, idx) => idx !== i && variant.color === v.color).length;
+            
+            return (
             <div key={i} className="rounded-2xl border border-black/10 bg-sand-50 p-4">
               <div className="mb-3 flex items-start gap-3">
                 <div className="grid flex-1 grid-cols-2 gap-3">
@@ -368,6 +398,22 @@ export default function VariantsEditor({
                   <CloseIcon className="h-4 w-4" />
                 </button>
               </div>
+
+              {/* Copy to same color button */}
+              {sameColorCount > 0 && (
+                <div className="mb-3">
+                  <button
+                    type="button"
+                    onClick={() => copyToSameColor(i)}
+                    className="inline-flex items-center gap-2 rounded-lg bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent-dark transition-colors hover:bg-accent/20"
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    Copy to all other {v.color} ({sameColorCount} {sameColorCount === 1 ? 'size' : 'sizes'})
+                  </button>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <Field label="SKU">
@@ -473,7 +519,8 @@ export default function VariantsEditor({
                 />
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
