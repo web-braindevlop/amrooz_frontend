@@ -8,6 +8,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: ${{ vars.DEPLOY_ENVIRONMENT || 'production' }}
     env:
       DEPLOY_SSH_HOST: ${{ secrets.SSH_HOST || vars.SSH_HOST }}
       DEPLOY_SSH_USERNAME: ${{ secrets.SSH_USERNAME || vars.SSH_USERNAME }}
