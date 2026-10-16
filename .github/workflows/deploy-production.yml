@@ -27,6 +27,18 @@ jobs:
           NEXT_PUBLIC_API_URL: https://api.amroozcollection.com
         run: npm run build
 
+      - name: Create deployment package
+        run: |
+          echo "📦 Creating deployment package..."
+          # Create a tarball with built files and necessary runtime files
+          tar -czf deployment.tar.gz \
+            .next \
+            public \
+            package.json \
+            package-lock.json \
+            next.config.js \
+            node_modules
+
       - name: Deploy to Hostinger via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -37,20 +49,56 @@ jobs:
           script: |
             echo "🚀 Starting frontend deployment..."
             
-            # Navigate to project directory
+            # Create deployment directory
+            DEPLOY_DIR="/home/u278943707/domains/amroozcollection.com/public_html"
+            mkdir -p $DEPLOY_DIR
+            cd $DEPLOY_DIR
+            
+            # Backup current deployment
+            if [ -d ".next" ]; then
+              echo "📦 Backing up current deployment..."
+              tar -czf backup-$(date +%Y%m%d-%H%M%S).tar.gz .next public || true
+              # Keep only last 3 backups
+              ls -t backup-*.tar.gz | tail -n +4 | xargs rm -f 2>/dev/null || true
+            fi
+            
+            echo "✅ Ready for file transfer"
+
+      - name: Transfer build files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "deployment.tar.gz"
+          target: "/home/u278943707/domains/amroozcollection.com/public_html/"
+
+      - name: Extract and restart application
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
             cd /home/u278943707/domains/amroozcollection.com/public_html
             
-            # Pull latest code from GitHub
-            git pull origin main
+            echo "📂 Extracting build files..."
+            tar -xzf deployment.tar.gz
+            rm deployment.tar.gz
             
-            # Install dependencies
-            npm ci --production
+            echo "🔧 Setting permissions..."
+            chmod -R 755 .next
+            chmod -R 755 public
             
-            # Build the application
-            NEXT_PUBLIC_API_URL=https://api.amroozcollection.com npm run build
-            
-            # Restart the application (if using PM2 or similar)
-            # pm2 restart amrooz-frontend || true
+            echo "🔄 Restarting application..."
+            # If using PM2
+            if command -v pm2 &> /dev/null; then
+              pm2 restart amrooz-frontend || pm2 start npm --name "amrooz-frontend" -- start
+            else
+              echo "⚠️  PM2 not found, manual restart may be needed"
+            fi
             
             echo "✅ Frontend deployment completed successfully!"
 
@@ -58,5 +106,13 @@ jobs:
         run: |
           echo "⏳ Waiting for server to restart..."
           sleep 10
-          curl -f https://amroozcollection.com || exit 1
-          echo "✅ Frontend is responding!"
+          
+          echo "🔍 Checking if site is responding..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://amroozcollection.com)
+          
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ]; then
+            echo "✅ Frontend is responding! (HTTP $HTTP_CODE)"
+          else
+            echo "⚠️  Warning: Site returned HTTP $HTTP_CODE"
+            exit 1
+          fi
