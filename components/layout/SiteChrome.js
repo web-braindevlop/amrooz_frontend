@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import { CustomerAuthProvider } from '@/lib/auth/CustomerAuthContext';
 import { CartProvider } from '@/lib/cart/CartContext';
 import { WishlistProvider } from '@/lib/wishlist/WishlistContext';
 import { ToastProvider } from '@/components/ui/ToastProvider';
@@ -17,14 +18,16 @@ export default function SiteChrome({ children }) {
   if (isAdmin) return <>{children}</>;
 
   return (
-    <CartProvider>
-      <WishlistProvider>
-        <ToastProvider>
-          <Navbar />
-          <main>{children}</main>
-          <Footer />
-        </ToastProvider>
-      </WishlistProvider>
-    </CartProvider>
+    <CustomerAuthProvider>
+      <CartProvider>
+        <WishlistProvider>
+          <ToastProvider>
+            <Navbar />
+            <main>{children}</main>
+            <Footer />
+          </ToastProvider>
+        </WishlistProvider>
+      </CartProvider>
+    </CustomerAuthProvider>
   );
 }

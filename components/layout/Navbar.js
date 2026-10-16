@@ -16,6 +16,7 @@ import { cn, formatPrice } from '@/utils/format';
 import { fetchProducts } from '@/lib/products';
 import { useCart } from '@/lib/cart/CartContext';
 import { useWishlist } from '@/lib/wishlist/WishlistContext';
+import { useCustomerAuth } from '@/lib/auth/CustomerAuthContext';
 
 const NAV_LINKS = [
   { label: 'Home', href: '/' },
@@ -30,9 +31,11 @@ export default function Navbar() {
   const router = useRouter();
   const { count: cartCount } = useCart();
   const { count: wishlistCount = 0 } = useWishlist();
+  const { customer } = useCustomerAuth();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -41,6 +44,7 @@ export default function Navbar() {
   const [activeIndex, setActiveIndex] = useState(-1);
   const searchInputRef = useRef(null);
   const optionRefs = useRef([]);
+  const accountDropdownRef = useRef(null);
 
   // Ensure client-side rendering for wishlist count
   useEffect(() => {
@@ -61,6 +65,19 @@ export default function Navbar() {
       document.body.style.overflow = '';
     };
   }, [menuOpen]);
+
+  // Close account dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (accountDropdownRef.current && !accountDropdownRef.current.contains(e.target)) {
+        setAccountDropdownOpen(false);
+      }
+    };
+    if (accountDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [accountDropdownOpen]);
 
   // Focus the field as soon as the search bar expands.
   useEffect(() => {
@@ -221,9 +238,12 @@ export default function Navbar() {
                 <SearchIcon className="h-5 w-5" />
               </IconButton>
 
-              <IconButton label="Account" href="/account" className="hidden sm:inline-flex">
-                <UserIcon className="h-5 w-5" />
-              </IconButton>
+              <AccountIconButton
+                customer={customer}
+                dropdownOpen={accountDropdownOpen}
+                setDropdownOpen={setAccountDropdownOpen}
+                dropdownRef={accountDropdownRef}
+              />
 
               <IconButton label="Wishlist" href="/wishlist" className="hidden sm:inline-flex" badge={mounted && wishlistCount > 0 ? (wishlistCount > 99 ? '99+' : wishlistCount) : null}>
                 <HeartIcon className="h-5 w-5" />
@@ -367,6 +387,7 @@ export default function Navbar() {
         cartCount={cartCount}
         wishlistCount={wishlistCount}
         mounted={mounted}
+        customer={customer}
       />
     </header>
   );
@@ -417,7 +438,86 @@ function IconButton({ children, label, href, badge, onClick, className }) {
   );
 }
 
-function MobileDrawer({ open, onClose, links, isActive, cartCount = 0, wishlistCount = 0, mounted = false }) {
+function AccountIconButton({ customer, dropdownOpen, setDropdownOpen, dropdownRef }) {
+  const router = useRouter();
+  const { logout } = useCustomerAuth();
+
+  const handleLogout = () => {
+    logout();
+    setDropdownOpen(false);
+    router.push('/');
+  };
+
+  if (!customer) {
+    return (
+      <IconButton label="Account" href="/account/login" className="hidden sm:inline-flex">
+        <UserIcon className="h-5 w-5" />
+      </IconButton>
+    );
+  }
+
+  return (
+    <div ref={dropdownRef} className="relative hidden sm:inline-flex">
+      <button
+        onClick={() => setDropdownOpen((v) => !v)}
+        aria-label="Account menu"
+        className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/5"
+      >
+        <UserIcon className="h-5 w-5" />
+      </button>
+
+      {dropdownOpen && (
+        <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl border border-black/10 bg-white shadow-luxe overflow-hidden animate-fade-in z-50">
+          <div className="px-4 py-3 border-b border-black/5">
+            <p className="text-sm font-medium text-primary truncate">
+              {customer.firstName} {customer.lastName}
+            </p>
+            <p className="text-xs text-primary/50 truncate">{customer.email}</p>
+          </div>
+          <div className="py-1">
+            <Link
+              href="/account/profile"
+              onClick={() => setDropdownOpen(false)}
+              className="block px-4 py-2.5 text-sm text-primary hover:bg-sand-50 transition-colors"
+            >
+              Profile
+            </Link>
+            <Link
+              href="/account/orders"
+              onClick={() => setDropdownOpen(false)}
+              className="block px-4 py-2.5 text-sm text-primary hover:bg-sand-50 transition-colors"
+            >
+              Orders
+            </Link>
+          </div>
+          <div className="border-t border-black/5 py-1">
+            <button
+              onClick={handleLogout}
+              className="w-full text-left px-4 py-2.5 text-sm text-primary hover:bg-sand-50 transition-colors"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MobileDrawer({ open, onClose, links, isActive, cartCount = 0, wishlistCount = 0, mounted = false, customer }) {
+  const router = useRouter();
+  const { logout } = useCustomerAuth();
+
+  const handleLogout = () => {
+    logout();
+    onClose();
+    router.push('/');
+  };
+
+  const accountHref = customer ? '/account/profile' : '/account/login';
+  const accountLabel = customer
+    ? `My Account (${customer.firstName})`
+    : 'My Account';
   return (
     <div className={cn('lg:hidden', open ? 'pointer-events-auto' : 'pointer-events-none')}>
       {/* Backdrop */}
@@ -476,11 +576,11 @@ function MobileDrawer({ open, onClose, links, isActive, cartCount = 0, wishlistC
             )}
           </Link>
           <Link
-            href="/account"
+            href={accountHref}
             onClick={onClose}
             className="flex items-center gap-3 rounded-2xl px-4 py-3 text-primary/80 hover:bg-primary/5"
           >
-            <UserIcon className="h-5 w-5" /> My Account
+            <UserIcon className="h-5 w-5" /> {accountLabel}
           </Link>
           <Link
             href="/wishlist"
@@ -494,6 +594,14 @@ function MobileDrawer({ open, onClose, links, isActive, cartCount = 0, wishlistC
               </span>
             )}
           </Link>
+          {customer && (
+            <button
+              onClick={handleLogout}
+              className="w-full text-left flex items-center gap-3 rounded-2xl px-4 py-3 text-primary/80 hover:bg-primary/5"
+            >
+              Logout
+            </button>
+          )}
         </div>
       </aside>
     </div>
