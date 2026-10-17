@@ -78,6 +78,7 @@ export default function DashboardPage() {
           icon={BoxIcon} 
           color="purple"
           trend={trends.products}
+          chartType="area"
         />
         <StatCard 
           label="Active Products" 
@@ -85,12 +86,14 @@ export default function DashboardPage() {
           icon={BoxIcon} 
           color="blue"
           trend={trends.products.slice(0, -1).concat(stats.products.active)}
+          chartType="line"
         />
         <StatCard 
           label="Categories" 
           value={stats.categories.total} 
           icon={TagIcon}
           color="green"
+          chartType="bar"
         />
         <StatCard 
           label="Total Orders" 
@@ -98,6 +101,7 @@ export default function DashboardPage() {
           icon={ReceiptIcon}
           color="orange"
           trend={trends.orders}
+          chartType="area"
         />
       </div>
 
@@ -109,6 +113,7 @@ export default function DashboardPage() {
           icon={ReceiptIcon} 
           color="pink"
           trend={trends.orders}
+          chartType="bar"
         />
         <StatCard
           label="Low Stock Products"
@@ -116,6 +121,7 @@ export default function DashboardPage() {
           icon={AlertIcon}
           color="red"
           hint="5 units or fewer"
+          chartType="line"
         />
         <StatCard 
           label="Revenue (Paid Orders)" 
@@ -123,6 +129,7 @@ export default function DashboardPage() {
           icon={CashIcon} 
           color="gold"
           trend={trends.revenue}
+          chartType="area"
         />
       </div>
 

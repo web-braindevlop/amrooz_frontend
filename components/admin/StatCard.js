@@ -1,7 +1,10 @@
-import { cn } from '@/utils/format';
+'use client';
 
-/** Single metric tile for the dashboard grid with optional trend graph. */
-export default function StatCard({ label, value, icon: Icon, color = 'default', hint, trend }) {
+import { cn } from '@/utils/format';
+import { AreaChart, Area, ResponsiveContainer, LineChart, Line, BarChart, Bar } from 'recharts';
+
+/** Single metric tile for the dashboard grid with Recharts graph. */
+export default function StatCard({ label, value, icon: Icon, color = 'default', hint, trend, chartType = 'area' }) {
   const colorClasses = {
     default: 'bg-gray-600',
     purple: 'bg-purple-500',
@@ -13,16 +16,22 @@ export default function StatCard({ label, value, icon: Icon, color = 'default', 
     gold: 'bg-amber-500',
   };
 
-  const graphColorClasses = {
-    default: 'bg-gray-700',
-    purple: 'bg-purple-600',
-    blue: 'bg-blue-600',
-    green: 'bg-emerald-600',
-    orange: 'bg-orange-600',
-    pink: 'bg-pink-600',
-    red: 'bg-red-600',
-    gold: 'bg-amber-600',
+  const chartColors = {
+    default: '#4b5563',
+    purple: '#a855f7',
+    blue: '#3b82f6',
+    green: '#10b981',
+    orange: '#f97316',
+    pink: '#ec4899',
+    red: '#ef4444',
+    gold: '#f59e0b',
   };
+
+  // Convert trend array to data format for Recharts
+  const chartData = trend?.map((val, idx) => ({
+    name: idx,
+    value: val,
+  })) || [];
 
   return (
     <div className={cn('rounded-3xl p-6 shadow-lg text-white relative overflow-hidden', colorClasses[color])}>
@@ -53,29 +62,51 @@ export default function StatCard({ label, value, icon: Icon, color = 'default', 
         <p className="mt-6 text-4xl font-bold">{value}</p>
         <p className="mt-2 text-sm font-medium opacity-90">{label}</p>
 
-        {/* Color-coded mini trend graph */}
-        {trend && trend.length > 0 && (
-          <div className="mt-4 h-16 flex items-end gap-1.5">
-            {trend.map((val, idx) => {
-              const maxVal = Math.max(...trend);
-              const height = maxVal > 0 ? (val / maxVal) * 100 : 0;
-              const isLast = idx === trend.length - 1;
-              return (
-                <div 
-                  key={idx} 
-                  className={cn(
-                    'flex-1 rounded-t-md transition-all duration-300',
-                    isLast ? graphColorClasses[color] : 'bg-white/30',
-                    'hover:opacity-80'
-                  )}
-                  style={{ 
-                    height: `${Math.max(height, 10)}%`,
-                    boxShadow: isLast ? '0 -2px 8px rgba(0,0,0,0.1)' : 'none'
-                  }}
-                  title={`Value: ${val}`}
-                />
-              );
-            })}
+        {/* Recharts Graph */}
+        {chartData.length > 0 && (
+          <div className="mt-4 h-16">
+            <ResponsiveContainer width="100%" height="100%">
+              {chartType === 'area' ? (
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id={`gradient-${color}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="white" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="white" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                  <Area 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke="white" 
+                    strokeWidth={2}
+                    fill={`url(#gradient-${color})`}
+                    animationDuration={1000}
+                  />
+                </AreaChart>
+              ) : chartType === 'line' ? (
+                <LineChart data={chartData}>
+                  <Line 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke="white" 
+                    strokeWidth={3}
+                    dot={{ fill: 'white', r: 3 }}
+                    activeDot={{ r: 5 }}
+                    animationDuration={1000}
+                  />
+                </LineChart>
+              ) : (
+                <BarChart data={chartData}>
+                  <Bar 
+                    dataKey="value" 
+                    fill="white"
+                    opacity={0.8}
+                    radius={[4, 4, 0, 0]}
+                    animationDuration={1000}
+                  />
+                </BarChart>
+              )}
+            </ResponsiveContainer>
           </div>
         )}
       </div>
