@@ -7,7 +7,7 @@ import { useCustomerAuth } from '@/lib/auth/CustomerAuthContext';
 
 export default function ProfileForm() {
   const { customer } = useCustomerAuth();
-  const { showToast } = useToast();
+  const toast = useToast();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
@@ -47,10 +47,10 @@ export default function ProfileForm() {
           phone: updated.phone || '',
         });
       }
-      showToast('Profile updated successfully', 'success');
+      toast.success('Profile updated successfully');
       setEditing(false);
     } catch (err) {
-      showToast(err.message || 'Failed to update profile', 'error');
+      toast.error(err.message || 'Failed to update profile');
     } finally {
       setSaving(false);
     }

@@ -9,7 +9,7 @@ import { useToast } from '@/components/ui/ToastProvider';
 export default function CustomerRegisterPage() {
   const { customer, isLoading, register } = useCustomerAuth();
   const router = useRouter();
-  const { showToast } = useToast();
+  const toast = useToast();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -46,10 +46,10 @@ export default function CustomerRegisterPage() {
       if (formData.phone) payload.phone = formData.phone;
 
       await register(payload);
-      showToast('Account created successfully!', 'success');
+      toast.success('Account created successfully!');
       router.push('/account/profile');
     } catch (err) {
-      showToast(err.message || 'Registration failed', 'error');
+      toast.error(err.message || 'Registration failed');
     } finally {
       setSubmitting(false);
     }

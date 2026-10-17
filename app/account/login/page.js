@@ -9,7 +9,7 @@ import { useToast } from '@/components/ui/ToastProvider';
 export default function CustomerLoginPage() {
   const { customer, isLoading, login } = useCustomerAuth();
   const router = useRouter();
-  const { showToast } = useToast();
+  const toast = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -25,10 +25,10 @@ export default function CustomerLoginPage() {
     setSubmitting(true);
     try {
       await login(email, password);
-      showToast('Welcome back!', 'success');
+      toast.success('Welcome back!');
       router.push('/account/profile');
     } catch (err) {
-      showToast(err.message || 'Login failed', 'error');
+      toast.error(err.message || 'Login failed');
     } finally {
       setSubmitting(false);
     }
