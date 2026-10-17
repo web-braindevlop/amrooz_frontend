@@ -6,7 +6,7 @@ import { forgotPassword } from '@/lib/auth/customerApi';
 import { useToast } from '@/components/ui/ToastProvider';
 
 export default function ForgotPasswordPage() {
-  const { showToast } = useToast();
+  const toast = useToast();
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -18,7 +18,7 @@ export default function ForgotPasswordPage() {
       await forgotPassword(email);
       setSuccess(true);
     } catch (err) {
-      showToast(err.message || 'Failed to send reset email', 'error');
+      toast.error(err.message || 'Failed to send reset email');
     } finally {
       setSubmitting(false);
     }

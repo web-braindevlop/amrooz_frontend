@@ -39,7 +39,7 @@ function PasswordStrengthIndicator({ password }) {
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { showToast } = useToast();
+  const toast = useToast();
   const [token, setToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -56,17 +56,17 @@ function ResetPasswordContent() {
     e.preventDefault();
 
     if (!token) {
-      showToast('Invalid reset link', 'error');
+      toast.error('Invalid reset link');
       return;
     }
 
     if (newPassword.length < 8) {
-      showToast('Password must be at least 8 characters', 'error');
+      toast.error('Password must be at least 8 characters');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      showToast('Passwords do not match', 'error');
+      toast.error('Passwords do not match');
       return;
     }
 
@@ -74,13 +74,13 @@ function ResetPasswordContent() {
     try {
       await resetPassword(token, newPassword);
       sessionStorage.setItem('passwordResetSuccess', 'true');
-      showToast('Password reset successfully!', 'success');
+      toast.success('Password reset successfully!');
       router.push('/account/login');
     } catch (err) {
       if (err.message.includes('Invalid') || err.message.includes('expired')) {
-        showToast('Reset link is invalid or expired. Please request a new one.', 'error');
+        toast.error('Reset link is invalid or expired. Please request a new one.');
       } else {
-        showToast(err.message || 'Failed to reset password', 'error');
+        toast.error(err.message || 'Failed to reset password');
       }
     } finally {
       setSubmitting(false);
