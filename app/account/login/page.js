@@ -87,6 +87,11 @@ export default function CustomerLoginPage() {
                 className="w-full rounded-xl border border-black/10 bg-sand-50 px-4 py-3 text-sm text-primary placeholder:text-primary/40 focus:border-accent-dark focus:outline-none focus:ring-2 focus:ring-accent-dark/20"
                 placeholder="••••••••"
               />
+              <div className="mt-2 text-right">
+                <Link href="/account/forgot-password" className="text-sm text-accent-dark hover:underline">
+                  Forgot Password?
+                </Link>
+              </div>
             </div>
 
             <button
