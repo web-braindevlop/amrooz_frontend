@@ -13,15 +13,15 @@ export default function StatCard({ label, value, icon: Icon, color = 'default', 
     gold: 'bg-amber-500',
   };
 
-  const lightColorClasses = {
-    default: 'bg-gray-100',
-    purple: 'bg-purple-100',
-    blue: 'bg-blue-100',
-    green: 'bg-emerald-100',
-    orange: 'bg-orange-100',
-    pink: 'bg-pink-100',
-    red: 'bg-red-100',
-    gold: 'bg-amber-100',
+  const graphColorClasses = {
+    default: 'bg-gray-700',
+    purple: 'bg-purple-600',
+    blue: 'bg-blue-600',
+    green: 'bg-emerald-600',
+    orange: 'bg-orange-600',
+    pink: 'bg-pink-600',
+    red: 'bg-red-600',
+    gold: 'bg-amber-600',
   };
 
   return (
@@ -30,11 +30,11 @@ export default function StatCard({ label, value, icon: Icon, color = 'default', 
       <div className="absolute inset-0 opacity-10">
         <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <pattern id={`grid-${color}`} width="20" height="20" patternUnits="userSpaceOnUse">
               <circle cx="10" cy="10" r="1" fill="white" />
             </pattern>
           </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" />
+          <rect width="100%" height="100%" fill={`url(#grid-${color})`} />
         </svg>
       </div>
 
@@ -53,17 +53,26 @@ export default function StatCard({ label, value, icon: Icon, color = 'default', 
         <p className="mt-6 text-4xl font-bold">{value}</p>
         <p className="mt-2 text-sm font-medium opacity-90">{label}</p>
 
-        {/* Mini trend graph */}
+        {/* Color-coded mini trend graph */}
         {trend && trend.length > 0 && (
-          <div className="mt-4 flex items-end gap-1 h-12">
+          <div className="mt-4 h-16 flex items-end gap-1.5">
             {trend.map((val, idx) => {
               const maxVal = Math.max(...trend);
               const height = maxVal > 0 ? (val / maxVal) * 100 : 0;
+              const isLast = idx === trend.length - 1;
               return (
                 <div 
                   key={idx} 
-                  className="flex-1 bg-white/30 rounded-t transition-all hover:bg-white/50"
-                  style={{ height: `${height}%`, minHeight: '8px' }}
+                  className={cn(
+                    'flex-1 rounded-t-md transition-all duration-300',
+                    isLast ? graphColorClasses[color] : 'bg-white/30',
+                    'hover:opacity-80'
+                  )}
+                  style={{ 
+                    height: `${Math.max(height, 10)}%`,
+                    boxShadow: isLast ? '0 -2px 8px rgba(0,0,0,0.1)' : 'none'
+                  }}
+                  title={`Value: ${val}`}
                 />
               );
             })}
