@@ -34,8 +34,9 @@ const PRODUCT_TYPES = [
 // Which "Product data" tabs each type exposes (mirrors WooCommerce). A
 // variable product's price and stock live entirely on its variations, so it
 // gets only the Variations tab — no separate General/Inventory to conflict with it.
+// For simple products, SKU and stock are now in General tab, so Inventory tab is removed.
 const TABS_BY_TYPE = {
-  simple: ['general', 'inventory'],
+  simple: ['general'],
   grouped: ['general', 'inventory'],
   external: ['general', 'inventory'],
   variable: ['variations'],
