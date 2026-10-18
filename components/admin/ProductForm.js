@@ -546,6 +546,38 @@ export default function ProductForm({ mode, product }) {
                         </div>
                       </div>
 
+                      {/* SKU and Stock Quantity fields - moved from Inventory tab */}
+                      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                        <div>
+                          <label htmlFor="sku" className={labelClass}>
+                            SKU <span className="normal-case text-primary/35">(optional)</span>
+                          </label>
+                          <input
+                            id="sku"
+                            value={form.sku}
+                            onChange={(e) => setField('sku', e.target.value)}
+                            placeholder="AMR-DRS-001"
+                            className={inputClass}
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="stock" className={labelClass}>
+                            Stock Quantity
+                          </label>
+                          <input
+                            id="stock"
+                            type="number"
+                            min="0"
+                            value={form.stock}
+                            onChange={(e) => setField('stock', e.target.value)}
+                            className={inputClass}
+                          />
+                          <p className="mt-1.5 text-xs text-primary/40">
+                            Set to 0 to show the product as "Sold Out".
+                          </p>
+                        </div>
+                      </div>
+
                       {isExternal && (
                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                           <div>
@@ -581,37 +613,10 @@ export default function ProductForm({ mode, product }) {
               )}
 
               {tab === 'inventory' && (
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                  <div>
-                    <label htmlFor="sku" className={labelClass}>
-                      SKU <span className="normal-case text-primary/35">(optional)</span>
-                    </label>
-                    <input
-                      id="sku"
-                      value={form.sku}
-                      onChange={(e) => setField('sku', e.target.value)}
-                      placeholder="AMR-DRS-001"
-                      className={inputClass}
-                    />
-                  </div>
-                  {!isGrouped && (
-                    <div>
-                      <label htmlFor="stock" className={labelClass}>
-                        Stock Quantity
-                      </label>
-                      <input
-                        id="stock"
-                        type="number"
-                        min="0"
-                        value={form.stock}
-                        onChange={(e) => setField('stock', e.target.value)}
-                        className={inputClass}
-                      />
-                      <p className="mt-1.5 text-xs text-primary/40">
-                        Set to 0 to show the product as “Sold Out”.
-                      </p>
-                    </div>
-                  )}
+                <div className="rounded-md bg-blue-50 p-4 border border-blue-200">
+                  <p className="text-sm text-blue-800">
+                    <strong>Note:</strong> SKU and Stock Quantity fields have been moved to the General tab for easier access.
+                  </p>
                 </div>
               )}
 

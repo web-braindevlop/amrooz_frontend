@@ -20,6 +20,9 @@ import { cn, formatPrice, discountPercent } from '@/utils/format';
 import { fetchProducts } from '@/lib/products';
 import { useCart } from '@/lib/cart/CartContext';
 import { useToast } from '@/components/ui/ToastProvider';
+import { useCustomerAuth } from '@/lib/auth/CustomerAuthContext';
+import { fetchWeeklySales } from '@/lib/reviews';
+import AddReviewForm from '@/components/products/AddReviewForm';
 
 /* Stable gradient placeholder per category, used when no imageUrl exists. */
 const CATEGORY_GRADIENT = {
@@ -79,12 +82,14 @@ function resolveVariantPricing(product, variant) {
 
 export default function ProductDetail({ product }) {
   const { addItem } = useCart();
+  const { customer } = useCustomerAuth();
   const toast = useToast();
   const [activeImage, setActiveImage] = useState(0);
   const [imgError, setImgError] = useState(false);
   const [wished, setWished] = useState(false);
   const [added, setAdded] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [weeklySales, setWeeklySales] = useState(null);
   // Bumped by a countdown when a sale window opens or closes, so the memoised
   // pricing below re-resolves at that instant without a page reload.
   const [saleBump, setSaleBump] = useState(0);
@@ -142,6 +147,15 @@ export default function ProductDetail({ product }) {
     setActiveImage(0);
     setImgError(false);
   }, [images]);
+
+  // Fetch weekly sales count
+  useEffect(() => {
+    if (product.id) {
+      fetchWeeklySales(product.id)
+        .then((data) => setWeeklySales(data?.count || 0))
+        .catch((err) => console.error('Failed to fetch weekly sales:', err));
+    }
+  }, [product.id]);
 
   const hasImages = images.length > 0 && !imgError;
 
@@ -286,6 +300,12 @@ export default function ProductDetail({ product }) {
 
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <Rating value={product.rating} count={product.reviewCount} size="md" />
+            {weeklySales != null && weeklySales > 0 && (
+              <span className="flex items-center gap-1.5 text-sm text-primary/60">
+                <span className="text-base">🔥</span>
+                <span className="font-medium">{weeklySales}+ sold this week</span>
+              </span>
+            )}
             {sku && <span className="text-xs text-primary/40">SKU: {sku}</span>}
           </div>
 
@@ -507,6 +527,8 @@ export default function ProductDetail({ product }) {
           reviews={product.reviews}
           rating={product.rating}
           reviewCount={product.reviewCount}
+          productId={product.id}
+          customer={customer}
         />
       </div>
     </section>
@@ -726,7 +748,14 @@ function GroupedItems({ productIds }) {
   );
 }
 
-function ProductReviews({ reviews = [], rating, reviewCount }) {
+function ProductReviews({ reviews = [], rating, reviewCount, productId, customer }) {
+  const [localReviews, setLocalReviews] = useState(reviews);
+  
+  const handleReviewSuccess = (newReview) => {
+    // Add the new review to the list optimistically
+    setLocalReviews([newReview, ...localReviews]);
+  };
+
   return (
     <div className="lg:border-l lg:border-black/5 lg:pl-10">
       <h2 className="font-serif text-2xl text-primary">Reviews</h2>
@@ -734,19 +763,38 @@ function ProductReviews({ reviews = [], rating, reviewCount }) {
         <Rating value={rating} count={reviewCount} size="md" />
       </div>
 
-      {!reviews?.length ? (
+      {/* Add Review Form - only for logged-in customers */}
+      <div className="mt-6 border-t border-black/5 pt-6">
+        {customer ? (
+          <AddReviewForm 
+            productId={productId} 
+            onSuccess={handleReviewSuccess}
+          />
+        ) : (
+          <div className="rounded-md bg-blue-50 p-4 border border-blue-200">
+            <p className="text-sm text-blue-800">
+              <a href="/account/login" className="font-medium underline hover:text-blue-900">
+                Log in
+              </a>{' '}
+              to leave a review
+            </p>
+          </div>
+        )}
+      </div>
+
+      {!localReviews?.length ? (
         <p className="mt-6 text-sm text-primary/50">
           No reviews yet — be the first to share your thoughts.
         </p>
       ) : (
         <div className="mt-6 space-y-6">
-          {reviews.map((r) => (
+          {localReviews.map((r) => (
             <div key={r.id} className="border-t border-black/5 pt-5 first:border-0 first:pt-0">
               <Rating value={r.rating} size="sm" />
               {r.title && <p className="mt-2 font-medium text-primary">{r.title}</p>}
               {r.comment && <p className="mt-1 text-sm text-primary/65">{r.comment}</p>}
               <p className="mt-2 text-xs text-primary/40">
-                {r.authorName || 'Anonymous'}
+                {r.authorName || (r.customer ? `${r.customer.firstName} ${r.customer.lastName?.charAt(0)}.` : 'Anonymous')}
                 {r.createdAt ? ` — ${new Date(r.createdAt).toLocaleDateString()}` : ''}
               </p>
             </div>
