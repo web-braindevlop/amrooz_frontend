@@ -94,6 +94,7 @@ function toFormState(product) {
       salePrice: '',
       sku: '',
       stock: '0',
+      sizes: ['Small', 'Medium', 'Large', 'X-Large'],
       isActive: true,
       isFeatured: false,
       isNew: false,
@@ -121,6 +122,9 @@ function toFormState(product) {
     salePrice: onSale ? String(product.price) : '',
     sku: product.sku || '',
     stock: product.stock != null ? String(product.stock) : '0',
+    sizes: Array.isArray(product.sizes) && product.sizes.length
+      ? product.sizes
+      : ['Small', 'Medium', 'Large', 'X-Large'],
     isActive: !!product.isActive,
     isFeatured: !!product.isFeatured,
     isNew: !!product.isNew,
@@ -354,6 +358,7 @@ export default function ProductForm({ mode, product }) {
         ...(form.sku.trim() && !isVariable ? { sku: form.sku.trim() } : {}),
         brandId: form.brandId ? Number(form.brandId) : null,
         stock: isVariable ? variableStock : Number(form.stock) || 0,
+        sizes: type === 'simple' ? form.sizes : [],
         categoryId: Number(form.categoryId),
         tagIds: selectedTagIds,
         externalUrl: isExternal ? form.externalUrl.trim() || null : null,
@@ -578,6 +583,22 @@ export default function ProductForm({ mode, product }) {
                           </p>
                         </div>
                       </div>
+
+                      {type === 'simple' && (
+                        <div>
+                          <label htmlFor="sizes" className={labelClass}>Available Sizes</label>
+                          <input
+                            id="sizes"
+                            value={form.sizes.join(', ')}
+                            onChange={(e) => setField('sizes', e.target.value.split(',').map((size) => size.trim()).filter(Boolean))}
+                            placeholder="Small, Medium, Large, X-Large"
+                            className={inputClass}
+                          />
+                          <p className="mt-1.5 text-xs text-primary/40">
+                            Enter sizes separated by commas. These appear as selectable buttons on the product page.
+                          </p>
+                        </div>
+                      )}
 
                       {isExternal && (
                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">

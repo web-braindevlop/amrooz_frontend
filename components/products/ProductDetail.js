@@ -100,8 +100,11 @@ export default function ProductDetail({ product }) {
   const isGrouped = product.type === 'grouped';
 
   const sizes = useMemo(
-    () => Array.from(new Set((product.variants || []).map((v) => v.size).filter(Boolean))),
-    [product.variants],
+    () => Array.from(new Set([
+      ...(product.sizes || []),
+      ...(product.variants || []).map((v) => v.size).filter(Boolean),
+    ])),
+    [product.sizes, product.variants],
   );
   const colorOptions = useMemo(() => {
     const seen = new Set();
